@@ -22,6 +22,7 @@ import {
   prefix,
   REGISTER_FIELD,
   RESET,
+  RESET_SECTION,
   SET_SUBMIT_FAILED,
   SET_SUBMIT_SUCCEEDED,
   START_ASYNC_VALIDATION,
@@ -36,9 +37,21 @@ import {
   CLEAR_FIELDS,
   UPDATE_SYNC_WARNINGS
 } from './actionTypes'
-import createDeleteInWithCleanUp from './deleteInWithCleanUp'
+import createCreateDeleteInWithCleanUp from './deleteInWithCleanUp'
 import plain from './structure/plain'
 import type { Action, Structure } from './types.js.flow'
+
+const shouldDelete = ({ getIn }) => (state, path) => {
+  let initialValuesPath = null
+
+  if (path.startsWith('values')) {
+    initialValuesPath = path.replace('values', 'initial')
+  }
+
+  const initialValueComparison = initialValuesPath ? (getIn(state, initialValuesPath) === undefined) : true
+
+  return (getIn(state, path) !== undefined) && initialValueComparison
+}
 
 const isReduxFormAction = action =>
   action &&
@@ -60,8 +73,8 @@ function createReducer<M, L>(structure: Structure<M, L>) {
     some,
     splice
   } = structure
-  const deleteInWithCleanUp = createDeleteInWithCleanUp(structure)
-  const plainDeleteInWithCleanUp = createDeleteInWithCleanUp(plain)
+  const deleteInWithCleanUp = createCreateDeleteInWithCleanUp(structure)(shouldDelete)
+  const plainDeleteInWithCleanUp = createCreateDeleteInWithCleanUp(plain)(shouldDelete)
   const doSplice = (state, key, field, index, removeNum, value, force) => {
     const existing = getIn(state, `${key}.${field}`)
     return existing || force
@@ -364,7 +377,12 @@ function createReducer<M, L>(structure: Structure<M, L>) {
       state,
       {
         payload,
-        meta: { keepDirty, keepSubmitSucceeded, updateUnregisteredFields }
+        meta: {
+          keepDirty,
+          keepSubmitSucceeded,
+          updateUnregisteredFields,
+          keepValues
+        }
       }
     ) {
       const mapData = fromJS(payload)
@@ -397,8 +415,8 @@ function createReducer<M, L>(structure: Structure<M, L>) {
 
       const previousValues = getIn(state, 'values')
       const previousInitialValues = getIn(state, 'initial')
-      const newInitialValues = mapData
 
+      let newInitialValues = mapData
       let newValues = previousValues
 
       if (keepDirty && registeredFields) {
@@ -456,6 +474,20 @@ function createReducer<M, L>(structure: Structure<M, L>) {
         newValues = newInitialValues
       }
 
+      if (keepValues) {
+        forEach(keys(previousValues), name => {
+          const previousValue = getIn(previousValues, name)
+
+          newValues = setIn(newValues, name, previousValue)
+        })
+
+        forEach(keys(previousInitialValues), name => {
+          const previousInitialValue = getIn(previousInitialValues, name)
+
+          newInitialValues = setIn(newInitialValues, name, previousInitialValue)
+        })
+      }
+
       if (keepSubmitSucceeded && getIn(state, 'submitSucceeded')) {
         result = setIn(result, 'submitSucceeded', true)
       }
@@ -492,6 +524,29 @@ function createReducer<M, L>(structure: Structure<M, L>) {
       }
       return result
     },
+    [RESET_SECTION](state, { meta: { sections } }) {
+      let result = state
+
+      sections.forEach(section => {
+        result = deleteInWithCleanUp(result, `asyncErrors.${section}`)
+        result = deleteInWithCleanUp(result, `submitErrors.${section}`)
+        result = deleteInWithCleanUp(result, `fields.${section}`)
+
+        const values = getIn(state, `initial.${section}`)
+        result = values
+          ? setIn(result, `values.${section}`, values)
+          : deleteInWithCleanUp(result, `values.${section}`)
+      })
+
+      const anyTouched = some(keys(getIn(result, 'registeredFields')), key =>
+        getIn(result, `fields.${key}.touched`)
+      )
+      result = anyTouched
+        ? setIn(result, 'anyTouched', true)
+        : deleteIn(result, 'anyTouched')
+
+      return result
+    },
     [SUBMIT](state) {
       return setIn(state, 'triggerSubmit', true)
     },
@@ -519,6 +574,7 @@ function createReducer<M, L>(structure: Structure<M, L>) {
         }
       } else {
         result = deleteIn(result, 'error')
+        result = deleteIn(result, 'asyncErrors')
       }
       return result
     },
@@ -541,7 +597,6 @@ function createReducer<M, L>(structure: Structure<M, L>) {
         }
         result = setIn(result, 'submitFailed', true)
       } else {
-        result = setIn(result, 'submitSucceeded', true)
         result = deleteIn(result, 'error')
         result = deleteIn(result, 'submitErrors')
       }

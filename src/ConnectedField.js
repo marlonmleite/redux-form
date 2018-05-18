@@ -71,6 +71,9 @@ const createConnectedField = (structure: Structure<*, *>) => {
         nextProps.children ||
         (nextPropsKeys.length !== thisPropsKeys.length ||
           nextPropsKeys.some(prop => {
+            if (~(nextProps.immutableProps || []).indexOf(prop)) {
+              return this.props[prop] !== nextProps[prop]
+            }
             return (
               !~propsToNotUpdateFor.indexOf(prop) &&
               !deepEqual(this.props[prop], nextProps[prop])
@@ -118,10 +121,11 @@ const createConnectedField = (structure: Structure<*, *>) => {
               }
             },
             newValue,
-            previousValue
+            previousValue,
+            name
           )
         } else {
-          onChange(event, newValue, previousValue)
+          onChange(event, newValue, previousValue, name)
         }
       }
       if (!defaultPrevented) {
@@ -141,15 +145,18 @@ const createConnectedField = (structure: Structure<*, *>) => {
       let defaultPrevented = false
       if (onFocus) {
         if (!isReactNative) {
-          onFocus({
-            ...event,
-            preventDefault: () => {
-              defaultPrevented = true
-              return eventPreventDefault(event)
-            }
-          })
+          onFocus(
+            {
+              ...event,
+              preventDefault: () => {
+                defaultPrevented = true
+                return eventPreventDefault(event)
+              }
+            },
+            name
+          )
         } else {
-          onFocus(event)
+          onFocus(event, name)
         }
       }
 
@@ -189,10 +196,11 @@ const createConnectedField = (structure: Structure<*, *>) => {
               }
             },
             newValue,
-            previousValue
+            previousValue,
+            name
           )
         } else {
-          onBlur(event, newValue, previousValue)
+          onBlur(event, newValue, previousValue, name)
         }
       }
 
@@ -208,11 +216,11 @@ const createConnectedField = (structure: Structure<*, *>) => {
     }
 
     handleDragStart = (event: any) => {
-      const { onDragStart, value } = this.props
+      const { name, onDragStart, value } = this.props
       eventDataTransferSetData(event, dataKey, value == null ? '' : value)
 
       if (onDragStart) {
-        onDragStart(event)
+        onDragStart(event, name)
       }
     }
 
@@ -237,7 +245,8 @@ const createConnectedField = (structure: Structure<*, *>) => {
             }
           },
           newValue,
-          previousValue
+          previousValue,
+          name
         )
       }
 
@@ -261,6 +270,7 @@ const createConnectedField = (structure: Structure<*, *>) => {
         onFocus, // eslint-disable-line no-unused-vars
         onDragStart, // eslint-disable-line no-unused-vars
         onDrop, // eslint-disable-line no-unused-vars
+        immutableProps, // eslint-disable-line no-unused-vars
         ...rest
       } = this.props
       const { custom, ...props } = createFieldProps(structure, name, {
@@ -306,12 +316,12 @@ const createConnectedField = (structure: Structure<*, *>) => {
       const syncWarning = getSyncWarning(getIn(formState, 'syncWarnings'), name)
       const pristine = deepEqual(value, initial)
       return {
-        asyncError: getIn(formState, `asyncErrors['${name}']`),
+        asyncError: getIn(formState, `asyncErrors.${name}`),
         asyncValidating: getIn(formState, 'asyncValidating') === name,
         dirty: !pristine,
         pristine,
         state: getIn(formState, `fields.${name}`),
-        submitError: getIn(formState, `submitErrors['${name}']`),
+        submitError: getIn(formState, `submitErrors.${name}`),
         submitFailed: getIn(formState, 'submitFailed'),
         submitting,
         syncError,

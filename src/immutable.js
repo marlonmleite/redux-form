@@ -37,6 +37,7 @@ export { default as getFormMeta } from './immutable/getFormMeta'
 export { default as getFormAsyncErrors } from './immutable/getFormAsyncErrors'
 export { default as getFormSyncWarnings } from './immutable/getFormSyncWarnings'
 export { default as getFormSubmitErrors } from './immutable/getFormSubmitErrors'
+export { default as isAsyncValidating } from './immutable/isAsyncValidating'
 export { default as isDirty } from './immutable/isDirty'
 export { default as isInvalid } from './immutable/isInvalid'
 export { default as isPristine } from './immutable/isPristine'
@@ -68,6 +69,7 @@ export const focus = actions.focus
 export const initialize = actions.initialize
 export const registerField = actions.registerField
 export const reset = actions.reset
+export const resetSection = actions.resetSection
 export const setSubmitFailed = actions.setSubmitFailed
 export const setSubmitSucceeded = actions.setSubmitSucceeded
 export const startAsyncValidation = actions.startAsyncValidation

@@ -5,7 +5,7 @@
 > The `props` listed on this page are the `props` that `redux-form` generates to
 > give to your decorated form component. The `props` that _you pass into your
 > wrapped component_ are listed
-> [here](https://redux-form.com/7.2.1/docs/api/ReduxForm.md/).
+> [here](https://redux-form.com/7.3.0/docs/api/ReduxForm.md/).
 
 > If you are a strict `PropTypes` completionist, `redux-form` exports all of
 > these
@@ -218,6 +218,11 @@ class SimpleForm extends Component {
 #### `reset() : Function`
 
 > Resets all the values in the form to the initialized state, making it pristine
+> again. This is a bound action creator, so it returns nothing.
+
+#### `resetSection(...sections:String) : Function`
+
+> Resets all the values in the form sections to the initialized state, making it pristine
 > again. This is a bound action creator, so it returns nothing.
 
 #### `submitFailed : boolean`

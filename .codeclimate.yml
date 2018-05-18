@@ -6,8 +6,10 @@ engines:
       - javascript
   eslint:
     enabled: true
+  method-complexity:
+    enabled: false
 ratings:
   paths:
   - "**.js"
-exclude_paths:
+exclude_patterns:
 - "**.spec.js"

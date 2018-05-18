@@ -133,6 +133,7 @@ type DestroyAction = () => void
 type RegisterFieldAction = (name: string, type: FieldType) => void
 type UnregisterFieldAction = (name: string, destroyOnUnmount: ?boolean) => void
 type ResetAction = () => void
+type ResetSectionAction = () => void
 type SetSubmitFailedAction = (...fields: string[]) => void
 type SetSubmitSucceededAction = (...fields: string[]) => void
 type StartAsyncValidationAction = (field: string) => void
@@ -175,6 +176,7 @@ export type Config = {
   enableReinitialize?: boolean,
   keepDirtyOnReinitialize?: boolean,
   form: string,
+  immutableProps?: string[],
   initialValues?: Values,
   getFormState?: GetFormState,
   onChange?: OnChangeFunction,
@@ -221,6 +223,7 @@ export type Props = {
   focus: FocusAction,
   form: string,
   getFormState: GetFormState,
+  immutableProps?: string[],
   initialize: InitializeAction,
   initialized: boolean,
   initialValues?: any,
@@ -236,6 +239,7 @@ export type Props = {
   registeredFields: Array<{ name: string, type: FieldType, count: number }>,
   registerField: RegisterFieldAction,
   reset: ResetAction,
+  resetSection: ResetSectionAction,
   setSubmitFailed: SetSubmitFailedAction,
   setSubmitSucceeded: SetSubmitSucceededAction,
   shouldAsyncValidate: ShouldAsyncValidateFunction,
@@ -388,8 +392,20 @@ const createReduxForm = (structure: Structure<*, *>) => {
           }
         }
 
+        shouldErrorFunction(): ShouldValidateFunction | ShouldErrorFunction {
+          const { shouldValidate, shouldError } = this.props
+          const shouldValidateOverridden =
+            shouldValidate !== defaultShouldValidate
+          const shouldErrorOverridden = shouldError !== defaultShouldError
+
+          return shouldValidateOverridden && !shouldErrorOverridden
+            ? shouldValidate
+            : shouldError
+        }
+
         validateIfNeeded(nextProps: ?Props) {
-          const { shouldValidate, shouldError, validate, values } = this.props
+          const { validate, values } = this.props
+          const shouldError = this.shouldErrorFunction()
           const fieldLevelValidate = this.generateValidator()
           if (validate || fieldLevelValidate) {
             const initialRender = nextProps === undefined
@@ -403,10 +419,8 @@ const createReduxForm = (structure: Structure<*, *>) => {
               fieldValidatorKeys,
               structure
             }
-            const shouldValidateResult = shouldValidate(validateParams)
-            const shouldErrorResult = shouldError(validateParams)
 
-            if (shouldValidateResult || shouldErrorResult) {
+            if (shouldError(validateParams)) {
               const propsToValidate =
                 initialRender || !nextProps ? this.props : nextProps
               const { _error, ...nextSyncErrors } = merge(
@@ -452,8 +466,20 @@ const createReduxForm = (structure: Structure<*, *>) => {
           }
         }
 
+        shouldWarnFunction(): ShouldValidateFunction | ShouldWarnFunction {
+          const { shouldValidate, shouldWarn } = this.props
+          const shouldValidateOverridden =
+            shouldValidate !== defaultShouldValidate
+          const shouldWarnOverridden = shouldWarn !== defaultShouldWarn
+
+          return shouldValidateOverridden && !shouldWarnOverridden
+            ? shouldValidate
+            : shouldWarn
+        }
+
         warnIfNeeded(nextProps: ?Props) {
-          const { shouldValidate, shouldWarn, warn, values } = this.props
+          const { warn, values } = this.props
+          const shouldWarn = this.shouldWarnFunction()
           const fieldLevelWarn = this.generateWarner()
           if (warn || fieldLevelWarn) {
             const initialRender = nextProps === undefined
@@ -467,10 +493,8 @@ const createReduxForm = (structure: Structure<*, *>) => {
               fieldValidatorKeys: fieldWarnerKeys,
               structure
             }
-            const shouldWarnResult = shouldWarn(validateParams)
-            const shouldValidateResult = shouldValidate(validateParams)
 
-            if (shouldValidateResult || shouldWarnResult) {
+            if (shouldWarn(validateParams)) {
               const propsToWarn =
                 initialRender || !nextProps ? this.props : nextProps
               const { _warning, ...nextSyncWarnings } = merge(
@@ -539,7 +563,7 @@ const createReduxForm = (structure: Structure<*, *>) => {
 
         componentDidMount() {
           if (!isHotReloading()) {
-            this.initIfNeeded()
+            this.initIfNeeded(this.props)
             this.validateIfNeeded()
             this.warnIfNeeded()
           }
@@ -597,6 +621,9 @@ const createReduxForm = (structure: Structure<*, *>) => {
               if (!this.fieldCounts[name]) {
                 delete this.fieldValidators[name]
                 delete this.fieldWarners[name]
+                this.lastFieldValidatorKeys = this.lastFieldValidatorKeys.filter(
+                  key => key !== name
+                )
               }
             } else {
               unregisterField(name, false)
@@ -830,6 +857,7 @@ const createReduxForm = (structure: Structure<*, *>) => {
             focus,
             form,
             getFormState,
+            immutableProps,
             initialize,
             initialized,
             initialValues,
@@ -841,6 +869,7 @@ const createReduxForm = (structure: Structure<*, *>) => {
             registeredFields,
             registerField,
             reset,
+            resetSection,
             setSubmitFailed,
             setSubmitSucceeded,
             shouldAsyncValidate,
@@ -890,6 +919,7 @@ const createReduxForm = (structure: Structure<*, *>) => {
             invalid,
             pristine,
             reset,
+            resetSection,
             submitting,
             submitFailed,
             submitSucceeded,
@@ -919,6 +949,7 @@ const createReduxForm = (structure: Structure<*, *>) => {
         destroyOnUnmount: PropTypes.bool,
         forceUnregisterOnUnmount: PropTypes.bool,
         form: PropTypes.string.isRequired,
+        immutableProps: PropTypes.arrayOf(PropTypes.string),
         initialValues: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
         getFormState: PropTypes.func,
         onSubmitFail: PropTypes.func,
@@ -967,8 +998,8 @@ const createReduxForm = (structure: Structure<*, *>) => {
 
           const pristine = shouldResetValues || deepEqual(initial, values)
           const asyncErrors = getIn(formState, 'asyncErrors')
-          const syncErrors = getIn(formState, 'syncErrors') || {}
-          const syncWarnings = getIn(formState, 'syncWarnings') || {}
+          const syncErrors = getIn(formState, 'syncErrors') || plain.empty
+          const syncWarnings = getIn(formState, 'syncWarnings') || plain.empty
           const registeredFields = getIn(formState, 'registeredFields')
           const valid = isValid(form, getFormState, false)(state)
           const validExceptSubmit = isValid(form, getFormState, true)(state)

@@ -21,6 +21,7 @@ import {
   INITIALIZE,
   REGISTER_FIELD,
   RESET,
+  RESET_SECTION,
   CLEAR_FIELDS,
   SET_SUBMIT_FAILED,
   SET_SUBMIT_SUCCEEDED,
@@ -81,6 +82,8 @@ import type {
   RegisterField,
   ResetAction,
   Reset,
+  ResetSectionAction,
+  ResetSection,
   StartAsyncValidationAction,
   StartAsyncValidation,
   StartSubmitAction,
@@ -286,8 +289,8 @@ const focus: Focus = (form: string, field: string): FocusAction => ({
 const initialize: Initialize = (
   form: string,
   values: Object,
-  keepDirty: boolean,
-  otherMeta: Object = {}
+  keepDirty?: boolean | Object,
+  otherMeta?: Object = {}
 ): InitializeAction => {
   if (keepDirty instanceof Object) {
     otherMeta = keepDirty
@@ -313,6 +316,14 @@ const registerField: RegisterField = (
 const reset: Reset = (form: string): ResetAction => ({
   type: RESET,
   meta: { form }
+})
+
+const resetSection: ResetSection = (
+  form: string,
+  ...sections: string[]
+): ResetSectionAction => ({
+  type: RESET_SECTION,
+  meta: { form, sections }
 })
 
 const startAsyncValidation: StartAsyncValidation = (
@@ -437,6 +448,7 @@ const actions = {
   initialize,
   registerField,
   reset,
+  resetSection,
   startAsyncValidation,
   startSubmit,
   stopAsyncValidation,

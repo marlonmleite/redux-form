@@ -88,7 +88,7 @@ actions such as `CHANGE` or `BLUR`, the specific field.
 
 > Marks the given field as `active` and `visited`.
 
-### `initialize(form:String, data:Object, [keepDirty:boolean], [options:{keepDirty:boolean, keepSubmitSucceeded:boolean, updateUnregisteredFields:boolean}])`
+### `initialize(form:String, data:Object, [keepDirty:boolean], [options:{keepDirty:boolean, keepSubmitSucceeded:boolean, updateUnregisteredFields:boolean, keepValues:boolean}])`
 
 > Sets the initial values in the form with which future data values will be
 > compared to calculate `dirty` and `pristine`. The `data` parameter may contain
@@ -107,6 +107,9 @@ actions such as `CHANGE` or `BLUR`, the specific field.
 > recommended, defaults to false because of non-breaking backwards
 > compatibility.
 
+> If the `keepValues` parameter is `true`, it will keep the old values and
+> initial values.
+
 ### `registerField(form:String, name:String, type:String)`
 
 > Registers a field with the form. The `type` parameter can be `Field` or
@@ -115,6 +118,11 @@ actions such as `CHANGE` or `BLUR`, the specific field.
 ### `reset(form:String)`
 
 > Resets the values in the form back to the values past in with the most recent
+> `initialize` action.
+
+### `resetSection(form:String, ...sections:String)`
+
+> Resets the values in the form sections back to the values past in with the most recent
 > `initialize` action.
 
 ### `setSubmitFailed(form:String, ...fields:String)`

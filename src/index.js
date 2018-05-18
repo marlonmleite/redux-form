@@ -35,6 +35,7 @@ export { default as getFormMeta } from './getFormMeta'
 export { default as getFormAsyncErrors } from './getFormAsyncErrors'
 export { default as getFormSyncWarnings } from './getFormSyncWarnings'
 export { default as getFormSubmitErrors } from './getFormSubmitErrors'
+export { default as isAsyncValidating } from './isAsyncValidating'
 export { default as isDirty } from './isDirty'
 export { default as isInvalid } from './isInvalid'
 export { default as isPristine } from './isPristine'
@@ -67,6 +68,7 @@ export const focus = actions.focus
 export const initialize = actions.initialize
 export const registerField = actions.registerField
 export const reset = actions.reset
+export const resetSection = actions.resetSection
 export const setSubmitFailed = actions.setSubmitFailed
 export const setSubmitSucceeded = actions.setSubmitSucceeded
 export const startAsyncValidation = actions.startAsyncValidation
