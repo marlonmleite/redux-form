@@ -46,11 +46,7 @@ const describeClearFields = (reducer, expect, { fromJS }) => () => {
           myField: {},
           myOtherField: {}
         },
-        error: 'some global error',
-        submitErrors: {
-          myField: undefined,
-          myOtherField: undefined
-        }
+        error: 'some global error'
       }
     })
   })
