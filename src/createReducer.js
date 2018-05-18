@@ -66,10 +66,10 @@ function createReducer<M, L>(structure: Structure<M, L>) {
     const existing = getIn(state, `${key}.${field}`)
     return existing || force
       ? setIn(
-          state,
-          `${key}.${field}`,
-          splice(existing, index, removeNum, value)
-        )
+        state,
+        `${key}.${field}`,
+        splice(existing, index, removeNum, value)
+      )
       : state
   }
   const doPlainSplice = (state, key, field, index, removeNum, value, force) => {
@@ -77,14 +77,14 @@ function createReducer<M, L>(structure: Structure<M, L>) {
     const existing = plain.getIn(slice, field)
     return existing || force
       ? setIn(
-          state,
-          key,
-          plain.setIn(
-            slice,
-            field,
-            plain.splice(existing, index, removeNum, value)
-          )
+        state,
+        key,
+        plain.setIn(
+          slice,
+          field,
+          plain.splice(existing, index, removeNum, value)
         )
+      )
       : state
   }
   const rootKeys = ['values', 'fields', 'submitErrors', 'asyncErrors']
@@ -223,7 +223,7 @@ function createReducer<M, L>(structure: Structure<M, L>) {
       }
       result = deleteInWithCleanUp(result, `asyncErrors.${field}`)
       if (!persistentSubmitErrors) {
-        result = deleteInWithCleanUp(result, `submitErrors.${field}`)
+        result = deleteInWithCleanUp(result, `submitErrors[${field}]`)
       }
       result = deleteInWithCleanUp(result, `fields.${field}.autofilled`)
       if (touch) {
@@ -253,7 +253,7 @@ function createReducer<M, L>(structure: Structure<M, L>) {
         result = deleteInWithCleanUp(result, `values.${field}`)
         result = deleteInWithCleanUp(result, `asyncErrors.${field}`)
         if (!persistentSubmitErrors) {
-          result = deleteInWithCleanUp(result, `submitErrors.${field}`)
+          result = deleteInWithCleanUp(result, `submitErrors[${field}]`)
         }
         result = deleteInWithCleanUp(result, `fields.${field}.autofilled`)
         if (!keepTouched) {
@@ -587,7 +587,7 @@ function createReducer<M, L>(structure: Structure<M, L>) {
    * Adds additional functionality to the reducer
    */
   function decorate(target) {
-    target.plugin = function(reducers) {
+    target.plugin = function (reducers) {
       // use 'function' keyword to enable 'this'
       return decorate(
         (state: any = empty, action: Action = { type: 'NONE' }) => {
