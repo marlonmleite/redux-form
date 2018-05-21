@@ -303,7 +303,10 @@ const createConnectedField = (structure: Structure<*, *>) => {
 
   const connector = connect(
     (state, ownProps) => {
-      const { name, _reduxForm: { initialValues, getFormState } } = ownProps
+      const {
+        name,
+        _reduxForm: { initialValues, getFormState }
+      } = ownProps
       const formState = getFormState(state)
       const initialState = getIn(formState, `initial.${name}`)
       const initial =
@@ -316,12 +319,12 @@ const createConnectedField = (structure: Structure<*, *>) => {
       const syncWarning = getSyncWarning(getIn(formState, 'syncWarnings'), name)
       const pristine = deepEqual(value, initial)
       return {
-        asyncError: getIn(formState, `asyncErrors.${name}`),
+        asyncError: getIn(formState, `asyncErrors['${name}']`),
         asyncValidating: getIn(formState, 'asyncValidating') === name,
         dirty: !pristine,
         pristine,
         state: getIn(formState, `fields.${name}`),
-        submitError: getIn(formState, `submitErrors.${name}`),
+        submitError: getIn(formState, `submitErrors['${name}']`),
         submitFailed: getIn(formState, 'submitFailed'),
         submitting,
         syncError,
