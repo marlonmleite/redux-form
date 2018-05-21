@@ -312,7 +312,7 @@ function createReducer<M, L>(structure: Structure<M, L>) {
       result = deleteInWithCleanUp(result, `asyncErrors.${field}`)
       if (!persistentSubmitErrors) {
         result = deleteInWithCleanUp(result, `submitErrors.${field}`)
-        result = deleteInWithCleanUp(result, `submitErrors[${field}]`)
+        result = deleteInWithCleanUp(result, `submitErrors['${field}']`)
       }
       result = deleteInWithCleanUp(result, `fields.${field}.autofilled`)
       if (touch) {
@@ -350,7 +350,7 @@ function createReducer<M, L>(structure: Structure<M, L>) {
         result = deleteInWithCleanUp(result, `asyncErrors.${field}`)
         if (!persistentSubmitErrors) {
           result = deleteInWithCleanUp(result, `submitErrors.${field}`)
-          result = deleteInWithCleanUp(result, `submitErrors[${field}]`)
+          result = deleteInWithCleanUp(result, `submitErrors['${field}']`)
         }
         result = deleteInWithCleanUp(result, `fields.${field}.autofilled`)
         if (!keepTouched) {

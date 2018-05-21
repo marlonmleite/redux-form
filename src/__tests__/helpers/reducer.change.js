@@ -253,7 +253,8 @@ const describeChange = (reducer, expect, { fromJS }) => () => {
         },
         error: 'some global error',
         submitErrors: {
-          fieldArray: []
+          fieldArray: [],
+          'fieldArray[0].Text': undefined
         },
         values: {
           fieldArray: [
